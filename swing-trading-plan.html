@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data-Driven Swing Trading Plan Framework</title>
+  <meta name="description" content="A structured, data-driven swing trading framework for regime-based long and short-side decision making." />
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: #0d1b2e;
+      --panel-2: #10243d;
+      --text: #e8eef8;
+      --muted: #aebbd0;
+      --accent: #3a7bff;
+      --accent-soft: rgba(58, 123, 255, 0.16);
+      --border: rgba(174, 187, 208, 0.18);
+      --green: #4ade80;
+      --yellow: #facc15;
+      --red: #fb7185;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(58, 123, 255, 0.18), transparent 34rem),
+        radial-gradient(circle at top right, rgba(74, 222, 128, 0.08), transparent 30rem),
+        var(--bg);
+      line-height: 1.65;
+    }
+
+    a { color: var(--text); }
+
+    .page-shell {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 72px;
+    }
+
+    .hero {
+      padding: 72px 0 44px;
+      display: grid;
+      gap: 22px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 800;
+    }
+
+    h1, h2, h3, h4 {
+      line-height: 1.12;
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 980px;
+      font-size: clamp(2.4rem, 6vw, 5.8rem);
+      letter-spacing: -0.07em;
+    }
+
+    .hero p {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.28rem);
+      margin: 0;
+    }
+
+    .disclaimer {
+      border: 1px solid var(--border);
+      background: rgba(250, 204, 21, 0.08);
+      color: #f8eaa0;
+      padding: 16px 18px;
+      border-radius: 18px;
+      max-width: 980px;
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+      margin: 26px 0;
+    }
+
+    .card {
+      grid-column: span 4;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border-radius: 24px;
+      padding: 22px;
+      min-height: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    }
+
+    .card.wide { grid-column: span 6; }
+    .card.full { grid-column: 1 / -1; }
+
+    .card h3 {
+      margin-bottom: 10px;
+      font-size: 1.15rem;
+    }
+
+    .card p, .card li {
+      color: var(--muted);
+      margin-top: 0;
+    }
+
+    .section {
+      margin-top: 46px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-header {
+      display: grid;
+      gap: 10px;
+      max-width: 900px;
+      margin-bottom: 20px;
+    }
+
+    .section h2 {
+      font-size: clamp(1.8rem, 3vw, 3rem);
+      letter-spacing: -0.04em;
+    }
+
+    .section-header p {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .regime {
+      display: grid;
+      gap: 14px;
+    }
+
+    .regime-row {
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+      background: var(--panel);
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 22px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge.green { color: #04130a; background: var(--green); }
+    .badge.yellow { color: #211a02; background: var(--yellow); }
+    .badge.red { color: #26040a; background: var(--red); }
+    .badge.blue { color: #eaf1ff; background: var(--accent-soft); border: 1px solid rgba(58, 123, 255, 0.34); }
+
+    ul, ol { padding-left: 1.2rem; }
+    li { margin: 0.3rem 0; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--panel);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--text);
+      background: rgba(58, 123, 255, 0.12);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    td { color: var(--muted); }
+
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      padding: 18px 20px;
+      border-radius: 18px;
+      color: var(--text);
+      margin: 18px 0;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 12px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 10px;
+      align-items: start;
+      color: var(--muted);
+    }
+
+    .check span:first-child {
+      width: 22px;
+      height: 22px;
+      border: 1px solid rgba(58, 123, 255, 0.55);
+      border-radius: 7px;
+      background: var(--accent-soft);
+      display: inline-block;
+      margin-top: 2px;
+    }
+
+    .footer {
+      margin-top: 52px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      border-top: 1px solid var(--border);
+      padding-top: 22px;
+    }
+
+    @media (max-width: 860px) {
+      .card, .card.wide { grid-column: 1 / -1; }
+      .regime-row { grid-template-columns: 1fr; }
+      .hero { padding-top: 42px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero">
+      <div class="eyebrow">Trading Framework · Data-Driven · Regime-Based</div>
+      <h1>Data-Driven Profitable Swing Trading Plan Framework</h1>
+      <p>A structured operating system for aggressive swing trading: when to focus long, when to consider short-side or puts, which sectors deserve attention, and how to control risk without trading randomly.</p>
+      <div class="disclaimer"><strong>Important:</strong> This is an educational trading framework, not financial advice. It is designed to improve process quality, risk control, and decision discipline. It does not guarantee profits.</div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <span class="badge blue">Core Rule</span>
+        <h3>Regime Comes First</h3>
+        <p>Do not start with a random chart. Start with market regime, then sector leadership, then stock relative strength, then the entry setup.</p>
+      </article>
+      <article class="card">
+        <span class="badge blue">Objective</span>
+        <h3>Aggressive, Not Reckless</h3>
+        <p>Aggressive growth comes from pressing high-quality opportunities when conditions support risk, not from oversizing weak setups.</p>
+      </article>
+      <article class="card">
+        <span class="badge blue">Bias</span>
+        <h3>Conditional, Not Permanent</h3>
+        <p>The plan is not always bullish or bearish. Long, short, puts, or cash depend on evidence from rates, volatility, breadth, leadership, and liquidity.</p>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Part I</div>
+        <h2>The Four-Layer Decision Stack</h2>
+        <p>Every trade must pass through a hierarchy. A good-looking setup in a bad regime is not the same as a good trade.</p>
+      </div>
+      <div class="grid">
+        <article class="card wide"><h3>1. Market Regime</h3><p>Is the broad environment supportive of risk-taking? Check rates, dollar, volatility, breadth, and index structure.</p></article>
+        <article class="card wide"><h3>2. Sector / Theme Leadership</h3><p>Is money flowing into the sector or theme? Sector strength creates tailwind and institutional support.</p></article>
+        <article class="card wide"><h3>3. Stock Quality & Relative Strength</h3><p>Is the stock outperforming its index and sector? Strong stocks should act well before the entry trigger.</p></article>
+        <article class="card wide"><h3>4. Setup & Execution</h3><p>Is there a clean entry, stop, target area, and reward-to-risk structure? If not, the trade is not ready.</p></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Part II</div>
+        <h2>Market Regime Framework</h2>
+        <p>The regime determines whether the trader should focus on long setups, short-side setups, puts, or mostly cash.</p>
+      </div>
+      <div class="regime">
+        <div class="regime-row">
+          <div><span class="badge green">Green</span></div>
+          <div>
+            <h3>Risk Expansion</h3>
+            <p>Conditions support long exposure and aggressive growth trading.</p>
+            <ul>
+              <li>Rates stable or falling; dollar stable or weakening.</li>
+              <li>Volatility compressing; breadth expanding.</li>
+              <li>Growth, semiconductors, AI infrastructure, and high-beta leadership improving.</li>
+              <li>Breakouts follow through and pullbacks are bought.</li>
+            </ul>
+            <p><strong>Bias:</strong> Long-focused. Use breakouts, pullbacks in leaders, continuation setups, and measured position scaling into strength.</p>
+          </div>
+        </div>
+        <div class="regime-row">
+          <div><span class="badge yellow">Yellow</span></div>
+          <div>
+            <h3>Neutral / Choppy</h3>
+            <p>Conditions are mixed. This is where both bulls and bears can get trapped.</p>
+            <ul>
+              <li>Indexes range-bound; leadership rotates quickly.</li>
+              <li>Rates unstable but not disorderly; volatility elevated but controlled.</li>
+              <li>Breadth mixed; breakouts work inconsistently.</li>
+            </ul>
+            <p><strong>Bias:</strong> Selective. Use smaller size, favor pullbacks or reclaims over chasing, and take profits faster.</p>
+          </div>
+        </div>
+        <div class="regime-row">
+          <div><span class="badge red">Red</span></div>
+          <div>
+            <h3>Risk Contraction</h3>
+            <p>Financial conditions are restrictive and risk appetite is weak.</p>
+            <ul>
+              <li>Rates elevated or rising; dollar strengthening.</li>
+              <li>Volatility elevated or expanding; breadth weak.</li>
+              <li>Defensives or energy leading while high-beta growth underperforms.</li>
+              <li>Breakouts fail, rallies fade, former leaders lose support.</li>
+            </ul>
+            <p><strong>Bias:</strong> Defensive. Reduce size, avoid aggressive dip buying, focus only on relative strength longs or structured short/put setups.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Part III</div>
+        <h2>Long vs Short-Side Decision Framework</h2>
+        <p>The plan should make direction conditional. The trader should not force long trades in a deteriorating tape or short strong stocks without structure.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Focus</th><th>Market Conditions</th><th>Sector Conditions</th><th>Best Setups</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Long / Calls</strong></td>
+              <td>Indexes above key moving averages, volatility compressing, breadth improving, rates stable/falling.</td>
+              <td>Sector outperforming, multiple names confirming strength, leadership broadening.</td>
+              <td>Pullback to rising support, breakout from tight consolidation, reclaim of key level, post-earnings hold.</td>
+            </tr>
+            <tr>
+              <td><strong>Short / Puts</strong></td>
+              <td>Indexes below key moving averages, rallies failing, volatility rising, breadth deteriorating.</td>
+              <td>Sector underperforming, multiple stocks losing support, leadership rotating away.</td>
+              <td>Failed breakout, breakdown from range, lower-high rejection, bear flag, failed retest.</td>
+            </tr>
+            <tr>
+              <td><strong>Cash / Wait</strong></td>
+              <td>Signals mixed, indexes chopping, volatility unpredictable, no clean reward-to-risk.</td>
+              <td>Leadership rotates daily or no sector has convincing strength/weakness.</td>
+              <td>No trade. Cash preserves optionality and protects the account from low-quality decisions.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Part IV</div>
+        <h2>Sector Focus by Regime</h2>
+        <p>Sector selection matters because stocks usually move best when they have sector tailwind.</p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <span class="badge green">Green</span>
+          <h3>Risk Expansion Sectors</h3>
+          <ul>
+            <li>Semiconductors</li>
+            <li>AI infrastructure</li>
+            <li>Software and cybersecurity</li>
+            <li>High-beta technology</li>
+            <li>Growth consumer discretionary</li>
+            <li>Crypto-linked equities when Bitcoin and liquidity align</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="badge yellow">Yellow</span>
+          <h3>Selective Sectors</h3>
+          <ul>
+            <li>Mega-cap technology leaders</li>
+            <li>Select semiconductor leaders</li>
+            <li>AI infrastructure names holding trend</li>
+            <li>Energy if oil is firm</li>
+            <li>Defensive growth and best-in-class earnings leaders</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="badge red">Red</span>
+          <h3>Defensive / Short-Side Focus</h3>
+          <ul>
+            <li>Longs: energy, healthcare, staples, utilities, strongest relative-strength names.</li>
+            <li>Shorts/puts: weak high-beta tech, consumer discretionary, unprofitable growth, failed momentum leaders.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Part V</div>
+        <h2>Setup Playbook</h2>
+        <p>Use a small number of repeatable setups. Consistency matters more than trying to trade every pattern.</p>
+      </div>
+      <div class="grid">
+        <article class="card wide">
+          <h3>Pullback to Support</h3>
+          <p><strong>Best for:</strong> GREEN regimes and strong sectors. The trend is intact, volume cools on pullback, and price holds a prior breakout level or rising moving average.</p>
+        </article>
+        <article class="card wide">
+          <h3>Breakout from Consolidation</h3>
+          <p><strong>Best for:</strong> strong momentum environments. Requires tight range, clear resistance, volume expansion, and supportive breadth.</p>
+        </article>
+        <article class="card wide">
+          <h3>Reclaim Setup</h3>
+          <p><strong>Best for:</strong> YELLOW regimes and transition periods. Price loses a key level, quickly reclaims it, and holds above it.</p>
+        </article>
+        <article class="card wide">
+          <h3>Failed Breakout Short / Put</h3>
+          <p><strong>Best for:</strong> RED regimes. Price breaks above resistance, fails, closes back under the level, and traps late buyers.</p>
+        </article>
+        <article class="card wide">
+          <h3>Breakdown from Range</h3>
+          <p><strong>Best for:</strong> weak sectors and former leaders losing trend. Requires support break, relative weakness, and preferably a failed retest.</p>
+        </article>
+        <article class="card wide">
+          <h3>No Trade Setup</h3>
+          <p><strong>Best for:</strong> unclear conditions. If entry, stop, target, and regime fit are not clear, skipping is the highest-quality decision.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Part VI</div>
+        <h2>Risk Management System</h2>
+        <p>Risk management is what separates aggressive trading from reckless trading.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Regime</th><th>Position Size</th><th>Profit Behavior</th><th>Risk Behavior</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>GREEN</strong></td><td>Full size allowed on A+ setups.</td><td>Let winners work; trail stops; add only to winners.</td><td>Risk can increase modestly, but only with clean invalidation.</td></tr>
+            <tr><td><strong>YELLOW</strong></td><td>Half-size default.</td><td>Take profits faster; respect resistance.</td><td>Avoid overtrading and chasing.</td></tr>
+            <tr><td><strong>RED</strong></td><td>Small size only.</td><td>Take profits aggressively; expect failed follow-through.</td><td>No averaging down; stops must be respected immediately.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout"><strong>Hard rule:</strong> Every trade must have a defined invalidation level before entry. If the stop is not clear, the trade is not ready.</div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Part VII</div>
+        <h2>Options / Puts Framework</h2>
+        <p>Options can accelerate returns, but they require stricter discipline because time decay and volatility pricing can punish hesitation.</p>
+      </div>
+      <div class="grid">
+        <article class="card wide">
+          <h3>When Calls Make Sense</h3>
+          <ul>
+            <li>Market regime is GREEN or improving YELLOW.</li>
+            <li>Sector is leading and stock has a clean breakout or reclaim.</li>
+            <li>Volatility is not excessively expensive.</li>
+            <li>There is enough time to expiration for the thesis to develop.</li>
+          </ul>
+        </article>
+        <article class="card wide">
+          <h3>When Puts Make Sense</h3>
+          <ul>
+            <li>Market regime is RED or deteriorating YELLOW.</li>
+            <li>Stock breaks support or rejects a declining moving average.</li>
+            <li>Sector is weak and breadth is deteriorating.</li>
+            <li>Risk is defined and the stock is not already deeply extended downward.</li>
+          </ul>
+        </article>
+      </div>
+      <div class="callout"><strong>Options rule:</strong> Do not average down losing options. Exit when the setup fails, not when the option becomes nearly worthless.</div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Part VIII</div>
+        <h2>Daily Workflow</h2>
+        <p>The workflow keeps the trader consistent before, during, and after the session.</p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <h3>Pre-Market</h3>
+          <ul>
+            <li>Classify regime.</li>
+            <li>Check rates, dollar, oil, volatility, and futures.</li>
+            <li>Identify leading and lagging sectors.</li>
+            <li>Build long and short watchlists.</li>
+            <li>Define entry, stop, target, and size.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>During Market</h3>
+          <ul>
+            <li>Wait for planned triggers.</li>
+            <li>Avoid impulse entries.</li>
+            <li>Do not add to losers.</li>
+            <li>Watch breadth and sector confirmation.</li>
+            <li>Respect the regime.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>After Market</h3>
+          <ul>
+            <li>Review whether the trade followed the plan.</li>
+            <li>Log regime, sector, setup, entry, exit, and mistake.</li>
+            <li>Grade process quality, not just profit/loss.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Part IX</div>
+        <h2>Master Checklist Before Every Trade</h2>
+      </div>
+      <div class="grid">
+        <article class="card full checklist">
+          <div class="check"><span></span><div><strong>Regime:</strong> Does the market environment support this trade direction?</div></div>
+          <div class="check"><span></span><div><strong>Rates and volatility:</strong> Are they helping or hurting the setup?</div></div>
+          <div class="check"><span></span><div><strong>Sector:</strong> Is the sector leading or lagging, and does that align with the trade?</div></div>
+          <div class="check"><span></span><div><strong>Stock:</strong> Is it showing relative strength for longs or relative weakness for shorts?</div></div>
+          <div class="check"><span></span><div><strong>Setup:</strong> Is this a pullback, breakout, reclaim, failed breakout, or breakdown?</div></div>
+          <div class="check"><span></span><div><strong>Risk:</strong> Where is the stop, what is the target, and is reward-to-risk acceptable?</div></div>
+          <div class="check"><span></span><div><strong>Size:</strong> Is position size appropriate for the regime?</div></div>
+          <div class="check"><span></span><div><strong>Mindset:</strong> Is the trade planned, or is it emotional?</div></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="eyebrow">Final Summary</div>
+        <h2>The Operating Principle</h2>
+      </div>
+      <div class="callout">
+        The goal is to take risk when the market is rewarding risk, reduce risk when the market is punishing risk, and remain patient when conditions are unclear.
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Regime</th><th>Primary Bias</th><th>Execution Style</th></tr></thead>
+          <tbody>
+            <tr><td><strong>GREEN</strong></td><td>Long-focused aggressive growth</td><td>Breakouts, pullbacks in leaders, let winners work.</td></tr>
+            <tr><td><strong>YELLOW</strong></td><td>Selective, conditional</td><td>Smaller size, faster profits, avoid chasing.</td></tr>
+            <tr><td><strong>RED</strong></td><td>Defensive or short-side selective</td><td>Relative strength only on longs; structured puts/shorts on breakdowns.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>Built as a static GitHub Pages reference document. Use this as a process framework, then validate it against a trade journal and real historical outcomes.</p>
+    </footer>
+  </main>
+</body>
+</html>
